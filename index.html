@@ -192,7 +192,7 @@ tr:hover td{background:#f8f9fa}
 
 /* ============== PRINT: OWNER REPORT (header + totals + monthly details) ============== */
 @media print{
-  @page{size:A4 landscape;margin:8mm 12mm 8mm}
+  @page{size:A4 landscape;margin:10mm 12mm 12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none!important;text-shadow:none!important}
   html,body{background:#fff!important;color:#222!important;font-size:11px}
   .wrap{max-width:none!important;padding:0!important;margin:0!important}
@@ -203,7 +203,7 @@ tr:hover td{background:#f8f9fa}
       grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;padding:0 0 8px;margin-bottom:6mm;
       background:#fff!important;border:0;border-bottom:3px double #777;border-radius:0}
   .logo{color:#2e2e2e!important;font-size:25pt}.logo small{color:#777!important;font-size:6.5pt}
-  .logo img{filter:grayscale(1);max-height:192px!important;max-width:100%;height:auto;width:auto}
+  .logo img{filter:grayscale(1)}
   .ttl{text-align:center}
   .ttl h1{color:#222!important;font-size:18pt;letter-spacing:.16em;font-weight:800}
   .ttl h2{display:inline-block;color:#222!important;font-size:12pt;font-weight:700;margin-top:6px;padding:3px 18px;border:1px solid #999;border-radius:20px;background:#f5f5f5}
@@ -246,6 +246,7 @@ tr:hover td{background:#f8f9fa}
   tr.tt td{background:#e2e2e2!important;border-top:2px solid #666!important;font-weight:800;font-size:11pt}
   tr{page-break-inside:avoid}
 
+  body::after{content:"Stations Sales Report  ·  Diff = Supply − Sales  ·  shaded figures = Loss";display:block;text-align:center;font-size:7.5pt;color:#777;margin-top:5mm;border-top:1px solid #ddd;padding-top:3mm;letter-spacing:.03em}
 
   /* more than 6 months: tighten automatically so it still fits one page */
   body.dense .hd{margin-bottom:4mm}
@@ -255,19 +256,6 @@ tr:hover td{background:#f8f9fa}
   body.dense table{font-size:9pt}
   body.dense th,body.dense td{padding:3px 7px!important}
   body.dense .note{display:none}
-
-  /* fit tuning: keeps 6 months on ONE page even with the 3x logo */
-  html,body{line-height:1.2}
-  .hd{margin-bottom:4mm!important;padding-bottom:6px!important}
-  .tot{margin-bottom:4mm!important;gap:5mm!important}
-  .tc h3{padding:4px 14px!important}
-  .tc div.r{padding:3px 14px!important}
-  .tc div.r:nth-of-type(4){padding:1px 14px 5px!important}
-  .tc .r b{font-size:13.5pt}
-  .card h2{padding-bottom:3px!important;margin-bottom:3px!important}
-  .note{margin-bottom:4px!important}
-  th,td{padding:4px 9px!important}
-  thead th{padding:4px 8px!important}
 }
 </style></head><body><div class="wrap">
 <header class="hd">
