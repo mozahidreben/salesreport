@@ -291,7 +291,7 @@ tr:hover td{background:#f8f9fa}
 
 <section class="tot" id="tot"></section>
 
-<section class="card"><h2>Monthly details</h2><p class="note">Diff = Supply − Sales. Negative (red) = loss. Positive (green) = gain. Latest month first. Tap headers to sort.</p>
+<section class="card" id="monthlyDetails" style="scroll-margin-top:90px"><h2>Monthly details</h2><p class="note">Diff = Supply − Sales. Negative (red) = loss. Positive (green) = gain. Latest month first. Tap headers to sort.</p>
 <div class="sc"><table id="tb"></table></div>
 <div id="tbCards"></div></section>
 
@@ -509,7 +509,16 @@ function renderTable(D,T){
       }
       return `<td>${fmt(T[c.idx])}</td>`;
     }).join('')+`</tr>`;
-  $('tb').innerHTML=`<thead>${head1}${head2}</thead><tbody>${body}${tot}</tbody>`;
+  const nMonths=D.length||1;
+  const avg=`<tr class="tt avg"><td class="s1"></td><td class="s2">Average</td>`+
+    cols.map(c=>{
+      if(c.type==='loss'){
+        const L=(T[c.idx+1]-T[c.idx])/nMonths, di=diffInfo(L);
+        return `<td class="${di.cls}">${diffText(L)}</td>`;
+      }
+      return `<td>${fmt(T[c.idx]/nMonths)}</td>`;
+    }).join('')+`</tr>`;
+  $('tb').innerHTML=`<thead>${head1}${head2}</thead><tbody>${body}${tot}${avg}</tbody>`;
   $('tb').querySelectorAll('th[data-sort]').forEach(th=>th.onclick=()=>{
     const k=th.dataset.sort;
     if(tableSort.col===k)tableSort.dir=tableSort.dir==='asc'?'desc':'asc';
@@ -523,6 +532,8 @@ function renderTableCards(D,T){
   const visible=FU();
   const cards=[...D].reverse().map((d,idx)=>({...d,sl:D.length-idx,isTotal:false}));
   cards.push({m:'Total',t:T,sl:'',isTotal:true});
+  const nM=D.length||1;
+  cards.push({m:'Average',t:T.map(x=>x/nM),sl:'',isTotal:true});
 
   $('tbCards').innerHTML=cards.map(d=>{
     const isOpen=true;
@@ -659,6 +670,12 @@ $('wa').onclick=()=>{
 
 /* ============ Events ============ */
 ['st','a','b'].forEach(i=>$(i).onchange=render);
+$('b').addEventListener('change',()=>{
+  setTimeout(()=>{
+    const el=$('monthlyDetails');
+    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  },150);
+});
 $('ref').onclick=()=>load();
 $('con').onclick=()=>{const l=$('lnk').value,id=(l.match(/\/d\/([\w-]+)/)||[])[1];if(!id){alert('That does not look like a Google Sheets link.');return}SHEET_ID=id;try{localStorage.setItem('cfg2',JSON.stringify({id:SHEET_ID}))}catch(e){}load()};
 $('fil').onchange=async e=>{if(e.target.files[0])load(await e.target.files[0].text())};
@@ -692,7 +709,7 @@ window.addEventListener('hashchange',()=>{
 })();
 
 /* ============ Print: auto-fit to one page ============ */
-window.addEventListener('beforeprint',()=>{document.body.classList.toggle('dense',document.querySelectorAll('#tb tbody tr').length-1>6)});
+window.addEventListener('beforeprint',()=>{document.body.classList.toggle('dense',document.querySelectorAll('#tb tbody tr').length-2>6)});
 window.addEventListener('afterprint',()=>document.body.classList.remove('dense'));
 
 /* ============ Boot ============ */
