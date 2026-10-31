@@ -51,6 +51,15 @@ select:focus,input:focus{outline:none;border-color:#7fb5a8;background:#fff;box-s
 .tc div.r{display:flex;justify-content:space-between;align-items:center;padding:11px 18px;border-top:1px solid var(--line);gap:10px}
 .tc .r span{color:var(--mut);font-size:12.5px;font-weight:600}
 .tc .r b{font-variant-numeric:tabular-nums;font-size:17px;font-weight:800;text-align:right}
+.cbx{position:relative}
+.cbx input{width:100%}
+#stList{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;margin:0;padding:4px;list-style:none;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);max-height:260px;overflow-y:auto;min-width:180px}
+#stList.open{display:block}
+#stList li{padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink);cursor:pointer}
+#stList li.act,#stList li:hover{background:#e6f1ed}
+#stList li mark{background:#fff3b0;color:inherit;border-radius:3px;padding:0 1px}
+#stList li.none{color:var(--mut);cursor:default}
+#stList li.none:hover{background:none}
 .neg{color:var(--bad)}.pos{color:var(--ok)}
 
 .minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px}
@@ -265,7 +274,7 @@ tr:hover td{background:#f8f9fa}
 </header>
 
 <section class="fl">
- <label>Station<select id="st"></select></label>
+ <label>Station<div class="cbx"><input id="stIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type station name…" aria-label="Station search" role="combobox" aria-expanded="false" aria-controls="stList"><ul id="stList" role="listbox"></ul></div><select id="st" hidden></select></label>
  <label>Start month<select id="a"></select></label>
  <label>End month<select id="b"></select></label>
  <label>Fuel type<select id="fu">
@@ -563,6 +572,7 @@ function renderTableCards(D,T){
 
 /* ============ Main render ============ */
 function render(){
+  if(window.syncStIn)syncStIn();
   const st=$('st').value,ch=[...months].reverse();
   const i=ch.indexOf($('a').value),j=ch.indexOf($('b').value);
   const lo=Math.min(i,j),hi=Math.max(i,j),chr=ch.slice(lo,hi+1);
@@ -584,7 +594,7 @@ function render(){
       <h3 class="${f[1]}">Total ${f[0]}</h3>
       <div class="r"><span>Sales</span><b>${fmt(s)}</b></div>
       <div class="r"><span>Supply</span><b>${fmt(u)}</b></div>
-      <div class="r"><span> Stock</span><b class="${stockCls}">${stockTxt}</b></div>
+      <div class="r"><span>Current Stock</span><b class="${stockCls}">${stockTxt}</b></div>
       <div class="r" style="padding-top:4px;padding-bottom:10px;border-top:0">
         <span style="font-size:11.5px;color:var(--mut);font-weight:600">${noteText}</span>
       </div>
@@ -668,6 +678,47 @@ $('wa').onclick=()=>{
 };
 
 /* ============ Events ============ */
+
+/* ============ Station type-ahead ============ */
+(function(){
+  const inp=$('stIn'),list=$('stList'),sel=$('st');
+  let items=[],act=-1;
+  const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const curText=()=>{const o=sel.options[sel.selectedIndex];return o?o.text:''};
+  window.syncStIn=()=>{if(document.activeElement!==inp)inp.value=curText()};
+  function open(q){
+    q=(q||'').trim().toLowerCase();
+    const all=[...sel.options].map(o=>({v:o.value,t:o.text}));
+    let m=q?all.filter(o=>o.t.toLowerCase().includes(q)):all;
+    if(q)m.sort((a,b)=>(b.t.toLowerCase().startsWith(q)-a.t.toLowerCase().startsWith(q))||a.t.localeCompare(b.t));
+    items=m;act=m.length&&q?0:-1;
+    list.innerHTML=m.length?m.map((o,i)=>{
+      let h=esc(o.t);
+      if(q){const k=o.t.toLowerCase().indexOf(q);h=esc(o.t.slice(0,k))+'<mark>'+esc(o.t.slice(k,k+q.length))+'</mark>'+esc(o.t.slice(k+q.length))}
+      return `<li role="option" data-i="${i}" class="${i===act?'act':''}">${h}</li>`}).join('')
+      :'<li class="none">No station found</li>';
+    list.classList.add('open');inp.setAttribute('aria-expanded','true');
+  }
+  function close(){list.classList.remove('open');inp.setAttribute('aria-expanded','false')}
+  function pick(i){
+    const o=items[i];if(!o)return;
+    sel.value=o.v;inp.value=o.t;close();inp.blur();
+    sel.dispatchEvent(new Event('change'));
+  }
+  function mark(){[...list.children].forEach((li,i)=>li.classList.toggle('act',i===act));
+    const a=list.children[act];if(a&&a.scrollIntoView)a.scrollIntoView({block:'nearest'})}
+  inp.addEventListener('focus',()=>{inp.select();open('')});
+  inp.addEventListener('input',()=>open(inp.value));
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){e.preventDefault();if(!list.classList.contains('open'))open(inp.value);act=Math.min(items.length-1,act+1);mark()}
+    else if(e.key==='ArrowUp'){e.preventDefault();act=Math.max(0,act-1);mark()}
+    else if(e.key==='Enter'){e.preventDefault();pick(act>=0?act:0)}
+    else if(e.key==='Escape'){close();inp.value=curText();inp.blur()}
+  });
+  list.addEventListener('mousedown',e=>{e.preventDefault();const li=e.target.closest('li[data-i]');if(li)pick(+li.dataset.i)});
+  list.addEventListener('touchstart',e=>{const li=e.target.closest('li[data-i]');if(li){e.preventDefault();pick(+li.dataset.i)}},{passive:false});
+  inp.addEventListener('blur',()=>{close();inp.value=curText()});
+})();
 ['st','a','b'].forEach(i=>$(i).onchange=render);
 $('b').addEventListener('change',()=>{
   setTimeout(()=>{
