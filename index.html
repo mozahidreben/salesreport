@@ -575,17 +575,16 @@ function render(){
 
   $('tot').innerHTML=visible.map(f=>{
     const k=ALL_FU.findIndex(x=>x[0]===f[0]);
-    const s=T[k*2],u=T[k*2+1],L=u-s;
-    const di=diffInfo(L);
-    const pctOfSales=s?Math.abs(L)/s*100:0;
-    const noteText=di.label==='Loss'?`${pctOfSales.toFixed(1)}% of sales missing`
-                 : di.label==='Gain'?`${pctOfSales.toFixed(1)}% extra sales`
-                 : 'No difference';
+    const s=T[k*2],u=T[k*2+1],stock=u-s;
+    const stockCls=Math.round(stock)>0?'pos':Math.round(stock)<0?'neg':'';
+    const stockTxt=(Math.round(stock)>0?'+':Math.round(stock)<0?'−':'')+fmt(Math.abs(stock));
+    const pctOfSales=s?Math.abs(stock)/s*100:0;
+    const noteText=`${pctOfSales.toFixed(1)}% of sales`;
     return `<div class="tc">
       <h3 class="${f[1]}">Total ${f[0]}</h3>
       <div class="r"><span>Sales</span><b>${fmt(s)}</b></div>
       <div class="r"><span>Supply</span><b>${fmt(u)}</b></div>
-      <div class="r"><span>${di.label}</span><b class="${di.cls}">${diffText(L)}</b></div>
+      <div class="r"><span> Stock</span><b class="${stockCls}">${stockTxt}</b></div>
       <div class="r" style="padding-top:4px;padding-bottom:10px;border-top:0">
         <span style="font-size:11.5px;color:var(--mut);font-weight:600">${noteText}</span>
       </div>
